@@ -1,0 +1,196 @@
+---
+title: "SIOSSAR: Spatial Transcriptomics Analysis for Pathway Activity and Hotspot Detection"
+author: "Qing Jia"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SIOSSAR: Spatial Transcriptomics Analysis for Pathway Activity and Hotspot Detection}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  tidy.opts = list(width.cutoff = 60), 
+  tidy = T,
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE
+)
+
+set.seed(123)
+```
+
+```{r setup}
+library(SIOSSAR)
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+library(stats)
+library(reshape2)
+library(tidyr)
+library(magrittr)
+library(Matrix)
+library(ggalluvial)
+library(pheatmap)
+
+```
+
+###Introduction
+SIOSSAR is a computational tool designed to analyze spatial transcriptomics data and identify pathway activity and functional hotspots based on cell-cell interactions.
+
+
+##### This vignette demonstrates how to use SIOSSAR with example data
+####1.Loaded Seurat object with spatial transcriptomics data,We first do the preprocessing following this tutorial 
+
+```{r, warning=FALSE, message=FALSE}
+#Load the example spatial data
+library(SIOSSAR)
+file_path <- system.file("extdata", "siossar_example.rds", package = "SIOSSAR")
+data <- readRDS(file_path)
+
+# abs_path <- "F:/jiaqing/R package/final/SIOSSAR/inst/extdata/siossar_example.rds"
+#  <- readRDS(abs_path)
+```
+
+
+####2.Pathway-associated ligand-receptor pairs (single or multiple pathways) can be retrieved from the data folder. We have classified these pairs into three confidence tiers (high, medium, low) to provide flexibility for user selection.
+
+```{r, warning=FALSE, message=FALSE}
+# Define pathways to analyze
+# These pathway names should match those in the PPI database
+# pathway <- c(
+#   "antigen_processing_and_presentation",
+#   "adaptive_immune_response",
+#   "cell_adhesion",
+#   "glycolytic_process"
+# )
+
+# You can also analyze a single pathway
+pathway <- c("antigen_processing_and_presentation")
+```
+
+
+#### 3.Run SIOSSAR. By default, it uses high-confidence pathway interacting pairs, but you can customize this via the LR_PPI parameter using options such as high_ppi_list, medium_ppi_list, or low_ppi_list.
+
+```{r, warning=FALSE, message=FALSE}
+# Get SIOSSAR scores for specific pathways
+# Run SIOSSAR with default parameters
+# This may take several minutes depending on dataset size
+data <- compute_siossar(
+  object = data,
+  LR_PPI = "high_ppi_list",
+  pathway = pathway,
+  verbose = F
+)
+
+
+# Analysis Steps Performed:
+# 
+# 1.Construct spatial adjacency network (top 10 nearest neighbors)
+# 
+# 2.Normalize expression data
+# 
+# 3.Extract pathway-specific PPIs
+# 
+# 4.Calculate secreted and membrane protein expression
+# 
+# 5.Select seed nodes (top 1% expressing cells)
+# 
+# 6.Perform random walk with restart
+# 
+# 7.Calculate integrated scores
+# 
+# 8.Statistical validation (100 permutations)
+# 
+# 9.Define activation hierarchy
+```
+
+
+###Results Structure
+
+
+```{r, warning=FALSE, message=FALSE}
+#After analysis, results are stored in the Seurat object's metadata:
+# View added metadata columns
+added_columns <- grep(paste(pathway, collapse = "|"), 
+                      names(data@meta.data), 
+                      value = TRUE)
+
+cat("New columns added to metadata:\n")
+print(added_columns)
+
+# Each pathway adds three columns:
+# - pathway_name: Activity scores
+# - pathway_name_region: Activation status (seed/activated/others)
+# - pathway_name_level: Hierarchical level (1-10)
+```
+
+
+###Visualization
+##### 1.Pathway Activity Score Map
+
+
+```{r, warning=FALSE, message=FALSE}
+#Visualize the spatial distribution of pathway activity scores:
+# Plot activity scores for the pathway
+p1 <- score_plot(data, "antigen_processing_and_presentation")
+p1
+
+# Customize the plot
+p1_custom <- score_plot(data, "antigen_processing_and_presentation") +
+  ggtitle("Antigen Processing and Presentation Pathway Activity") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+p1_custom
+```
+##### 2.Activation Region Visualization
+
+```{r, warning=FALSE, message=FALSE}
+#Identify statistically significant activation regions:
+# Plot activation regions
+p2 <- hot_region_plot(data, "antigen_processing_and_presentation")
+p2
+
+# Colors indicate:
+# - Blue: Activated spots (p-value < 0.1)
+# - Yellow: Seed nodes (top 1% expressing cells)
+# - Gray: Non-activated spots
+```
+##### 3. Hierarchical Layer Analysis
+
+```{r, warning=FALSE, message=FALSE}
+# Plot hierarchical layers (show layers 1-10)
+p3 <- hplot(data, "antigen_processing_and_presentation", show_layers = 1:10)
+p3
+
+# This plot shows the propagation pattern:
+# - Layer 1: Seed nodes + Activated spots
+# - Layer 2-10: Propagating others spots
+```
+##### 4. Ligand-Receptor Sankey Diagram
+
+```{r, warning=FALSE, message=FALSE}
+# Create Sankey diagram for pathway
+p4 <- plot_PPI_sankey(data, pathway[1])
+p4
+```
+##### 5. Pathway Heatmap Comparison
+
+```{r, warning=FALSE, message=FALSE}
+# Plot heatmap for top pathways
+p5 <- plot_top_pathway_heatmap(data, pathway, top_n = 1)
+p5
+
+# Heatmap features:
+# - Rows: PathwaysSpatial spots
+# - Columns: Spatial spots
+# - Color: Activity scores
+# - Dendrograms: Hierarchical clustering
+```
+
+
+
+
+
