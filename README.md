@@ -5,7 +5,7 @@ Spatial Transcriptomics Analysis for Pathway Activity and Hotspot Detection
 **SIOSSAR** is an R package designed for analyzing spatial transcriptomics data to identify pathway activity and functional hotspots based on cell‑cell interactions.  
 It integrates spatial network construction, ligand‑receptor expression, random walk with restart, and permutation testing to provide a comprehensive view of pathway activation in tissue architecture.
 <div align=center>
-<img width="410" height="432" alt="e5365d3f8702092611734aa5e1ae1aac" src="https://github.com/user-attachments/assets/dab46e84-3645-4e40-b8a6-7e18c4aeba0c" />
+<img width="430" height="452" alt="e5365d3f8702092611734aa5e1ae1aac" src="https://github.com/user-attachments/assets/dab46e84-3645-4e40-b8a6-7e18c4aeba0c" />
 </div>
 
 ## Installation
