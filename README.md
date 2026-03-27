@@ -37,7 +37,7 @@ pathway <- c("antigen_processing_and_presentation")
 data <- compute_siossar(
   object = data,
   pathway = pathway,
-  verbose = F
+  verbose = T
 )
 
 # Plot activity scores for the pathway
