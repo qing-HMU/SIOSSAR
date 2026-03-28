@@ -590,8 +590,8 @@ hplot <- function(out_data, pathway, show_layers = 1:10, layer_colors = NULL){
   ) +
     scale_fill_manual(values = layer_colors, na.value = "grey50") +  # 添加na.value处理NA值
     theme(
-      legend.position = "top",
-      legend.title.position = "top",
+      #legend.position = "top",
+      #legend.title.position = "top",
       legend.title = element_text(size = 14),
       legend.text = element_text(size = 10),
       plot.background = element_rect(fill = "white"),
@@ -617,8 +617,8 @@ score_plot <- function(out_data,pathway){
   p <- SpatialFeaturePlot(out_data, features =pathway, pt.size.factor =2, alpha = c(0.3, 1),
                           crop =T,#只显示含有数据的区域，不包括外部的空白区域
                           image.alpha =0.7,stroke =NA)+
-    theme(legend.position = "top",
-          legend.title.position="top",
+    theme(#legend.position = "top",
+          #legend.title.position="top",
           legend.title = element_text(size = 14),  # 图例标题字体大小
           legend.text = element_text(size = 10),    # 图例文本字体大小
           plot.background = element_rect(fill = "white"),
@@ -644,8 +644,8 @@ hot_region_plot <- function(out_data,pathway){
 
   p <- SpatialDimPlot(out_data, label = F, label.size = 2, pt.size.factor =1.5,alpha = 1,
                       group.by = paste0(pathway,"_region"), image.alpha = 1,stroke =NA)+
-    theme(legend.position = "top",
-          legend.title.position="top",
+    theme(#legend.position = "top",
+          #legend.title.position="top",
           legend.title = element_text(size = 14),  # 图例标题字体大小
           legend.text = element_text(size = 12),    # 图例文本字体大小
           plot.background = element_rect(fill = "white"),
