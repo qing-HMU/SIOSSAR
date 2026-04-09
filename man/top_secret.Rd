@@ -7,13 +7,14 @@
 top_secret(SM_exp)
 }
 \arguments{
-\item{SM_exp:}{A data frame containing information on the average secreted protein expression for each spot and whether the expression content is zero}
+\item{SM_exp}{A data frame containing information on the average secreted protein expression for each spot and whether the expression content is zero}
 }
 \description{
 Filter the number of seed nodes
 }
 \examples{
+\dontrun{
 topn_sm <- top_secret(SM_exp)
-
+}
 
 }

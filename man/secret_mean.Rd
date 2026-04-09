@@ -7,15 +7,16 @@
 secret_mean(exp, gene)
 }
 \arguments{
-\item{exp:}{Expression profiling data with genes as rows and genomic loci as columns}
+\item{exp}{Expression profiling data with genes as rows and genomic loci as columns}
 
-\item{gene:}{A vector, a secreted protein gene}
+\item{gene}{A vector, a secreted protein gene}
 }
 \description{
 Expression profile of secreted proteins
 }
 \examples{
+\dontrun{
 sm <- secret_mean(exp,gene=c("CCL21","ITGB1"))
-
+}
 
 }

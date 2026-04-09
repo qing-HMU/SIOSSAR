@@ -4,18 +4,19 @@
 \alias{compute_siossar}
 \title{Pathway activation maps were calculated as well as scores for each spot}
 \usage{
-compute_siossar(object, LR_PPI = "high_ppi_list", pathway, norm="NormalizeData" ,verbose = TRUE)
+compute_siossar(object, LR_PPI = "high_ppi_list", pathway,
+                        norm="NormalizeData" ,verbose = TRUE)
 }
 \arguments{
-\item{object:}{a seurat object}
+\item{object}{a seurat object}
 
-\item{LR_PPI:}{Threshold for background interaction pairs (confidence level),e.g. low-, medium-, and high-confidence}
+\item{LR_PPI}{Threshold for background interaction pairs (confidence level),e.g. low-, medium-, and high-confidence}
 
-\item{pathway:}{A vector that needs to run the pathway}
+\item{pathway}{A vector that needs to run the pathway}
 
-\item{norm:}{normalization method,NormalizeData or SCTransform}
+\item{norm}{normalization method,NormalizeData or SCTransform}
 
-\item{verbose:}{Logical value, whether to print detailed progress information}
+\item{verbose}{Logical value, whether to print detailed progress information}
 }
 \value{
 returns a dataframe with cells as rows and mca coordinates as columns

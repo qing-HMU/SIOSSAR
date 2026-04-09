@@ -1,6 +1,6 @@
 Package: SIOSSAR
 Type: Package
-Title: Pathway-Specific Assessment Based on Protein Interactions
+Title: Analysis Framework for Evaluating Pathway Activity and Hotspots from Spatial Transcriptomic Data Based on Cell-Cell Interactions
 Version: 0.1.0
 Authors@R: c(
     person(
@@ -14,23 +14,13 @@ Description: Analysis framework for evaluating pathway activity and hotspots fro
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Depends: 
-    R (>= 4.0)
-Imports:
-    Seurat,
-    dplyr,
-    stats,
-    reshape2,
-    tidyr,
-    magrittr,
-    Matrix,
-    ggplot2,
-    ggalluvial,
-    pheatmap
+LazyDataCompression: xz
+Depends: R (>= 4.0)
+Imports: Seurat, dplyr, reshape2, tidyr, magrittr, ggplot2, ggalluvial, pheatmap, scales
 RoxygenNote: 7.2.3
-Suggests: 
-    knitr,
-    patchwork,
-    SeuratData,
-    rmarkdown
+Suggests: knitr, patchwork, rmarkdown
 VignetteBuilder: knitr
+NeedsCompilation: no
+Packaged: 2026-03-28 08:12:48 UTC; DELL
+Author: Jia Qing [aut, cre]
+Maintainer: Jia Qing <jiaqing@hrbmu.edu.cn>

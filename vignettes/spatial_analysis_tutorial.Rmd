@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   tidy.opts = list(width.cutoff = 60), 
-  tidy = T,
+  tidy = FALSE,
   echo = TRUE,
   warning = FALSE,
   message = FALSE
@@ -31,7 +31,6 @@ library(stats)
 library(reshape2)
 library(tidyr)
 library(magrittr)
-library(Matrix)
 library(ggalluvial)
 library(pheatmap)
 
@@ -47,11 +46,12 @@ SIOSSAR is a computational tool designed to analyze spatial transcriptomics data
 ```{r, warning=FALSE, message=FALSE}
 #Load the example spatial data
 library(SIOSSAR)
-file_path <- system.file("extdata", "siossar_example.rds", package = "SIOSSAR")
+if (packageVersion("Seurat") >= "5.0.0") {
+  file_path <- system.file("extdata", "siossar_example_v5.rds", package = "SIOSSAR")
+}else{
+  file_path <- system.file("extdata", "siossar_example_v4.rds", package = "SIOSSAR")
+}
 data <- readRDS(file_path)
-
-# abs_path <- "F:/jiaqing/R package/final/SIOSSAR/inst/extdata/siossar_example.rds"
-#  <- readRDS(abs_path)
 ```
 
 

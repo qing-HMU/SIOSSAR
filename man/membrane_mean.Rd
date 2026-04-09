@@ -7,15 +7,16 @@
 membrane_mean(exp, gene)
 }
 \arguments{
-\item{exp:}{Expression profiling data with genes as rows and genomic loci as columns}
+\item{exp}{Expression profiling data with genes as rows and genomic loci as columns}
 
-\item{gene:}{A vector, a membrane protein gene}
+\item{gene}{A vector, a membrane protein gene}
 }
 \description{
 Membrane protein expression profile
 }
 \examples{
-mm <- membrane_mean(exp,gene=c("CCR7","SRC"))
-
+\dontrun{
+mm <- membrane_mean(exp, gene = c("CCR7", "SRC"))
+}
 
 }

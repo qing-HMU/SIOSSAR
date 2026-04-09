@@ -18,7 +18,8 @@ Output graph
 Output Contribution of SP-MP
 }
 \examples{
+\dontrun{
 p <- plot_PPI_sankey(object,"glycolytic_process")
-
+}
 
 }

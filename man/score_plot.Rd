@@ -18,7 +18,7 @@ Output graph
 Output score results
 }
 \examples{
-p <- score_plot(object,"glycolytic_process")
-
-
+\dontrun{
+p <- score_plot(object, "glycolytic_process")
+}
 }

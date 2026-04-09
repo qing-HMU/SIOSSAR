@@ -1,14 +1,17 @@
 #' @title RandomWalk function
 #'
-#' @param igraphM: matrix of adjacency,the rows and columns are spot
-#' @param VertexWeight: a vector v with a length equal to the total number of spots in the slice
-#' @param EdgeWeight: logical value, default is TRUE
-#' @param gamma: restart probability,default is 0.7
+#' @param igraphM  matrix of adjacency,the rows and columns are spot
+#' @param VertexWeight  a vector v with a length equal to the total number of spots in the slice
+#' @param EdgeWeight  logical value, default is TRUE
+#' @param gamma  restart probability,default is 0.7
 #'
 #' @return returns a vector ,reflecting the probability each spot is labeled during the propagation
 #' @export
-#' @examples visProbs<-RandomWalk2igraph(matrix1,Vector1,EdgeWeight=TRUE,gamma=0.7)
-#'
+#' @examples
+#' \dontrun{
+#' # This example requires a valid adjacency matrix and seed vector
+#' # visProbs <- RandomWalk2igraph(matrix1, Vector1, EdgeWeight = TRUE, gamma = 0.7)
+#' }
 #'
 RandomWalk2igraph<-function(igraphM,VertexWeight,EdgeWeight=TRUE,gamma=0.7){
   W<-igraphM
@@ -46,13 +49,18 @@ RandomWalk2igraph<-function(igraphM,VertexWeight,EdgeWeight=TRUE,gamma=0.7){
 
 #' @title The distance matrix undirected network was constructed to calculate the distance between any two spots
 #'
-#' @param M: A data frame containing the coordinates of the idle data and the barcode
+#' @param M  A data frame containing the coordinates of the idle data and the barcode
 #' @return A data frame containing the Euclidean distance between any two spots
 #' @export
-#' @import stats reshape2 dplyr tidyr
-#' @examples dist_long <- construct_adj_long(meta)
+#' @importFrom stats dist
+#' @importFrom reshape2 melt
+#' @importFrom dplyr group_by filter
+#' @importFrom tidyr spread
 #'
-#'
+#' @examples
+#' \dontrun{
+#' dist_long <- construct_adj_long(meta)
+#' }
 construct_adj_long <- function(M){
   st_dist <- as.matrix(stats::dist(x = cbind(M$x, M$y)))
   rownames(st_dist) <- M$barcode
@@ -70,11 +78,13 @@ construct_adj_long <- function(M){
 
 #' @title Construct the weighted adjacency matrix
 #'
-#' @param dist_long_sub: A data frame including the distance between any two spots
+#' @param dist_long_sub  A data frame including the distance between any two spots
 #' @export
-#' @import reshape2 dplyr tidyr magrittr
-#' @examples Network <- construct_adj_wide(dist_long)
-#'
+#' @importFrom tidyr spread
+#' @examples
+#' \dontrun{
+#' Network <- construct_adj_wide(dist_long)
+#' }
 #'
 construct_adj_wide <-function(dist_long_sub){
   dist_long_sub <- as.data.frame(dist_long_sub)
@@ -82,7 +92,7 @@ construct_adj_wide <-function(dist_long_sub){
   dist_long_sub$to <- as.character(dist_long_sub$to)
   dist_long_sub$value <- 1/dist_long_sub$distance
   dist_long_sub$distance <- NULL
-  wide_data <- tidyr::spread(dist_long_sub, key = from, value = value,fill = 0)
+  wide_data <- spread(dist_long_sub, key = from, value = value,fill = 0)
   rownames(wide_data) <- wide_data$to
   wide_data$to <- NULL
   row_no <- setdiff(colnames(wide_data),rownames(wide_data))
@@ -101,45 +111,70 @@ construct_adj_wide <-function(dist_long_sub){
 
 #' @title Normalization of expression profiles
 #'
-#' @param object: a seurat object
-#' @param norm: normalization method,NormalizeData or SCTransform
+#' @param object  a seurat object
+#' @param norm  normalization method, NormalizeData or SCTransform
 #' @return returns a dataframe with genes as rows and genomic loci as columns
 #' @export
-#' @import Seurat
-#' @examples exp <- norm(object)
+#' @importFrom Seurat GetAssayData
+#' @examples
+#' \dontrun{
+#' exp <- normdata(object)
+#' }
 #'
-#'
-norm <- function(object,norm="NormalizeData"){
-  if(packageVersion("Seurat")<"5.0.0"){
-    sp_counts <- GetAssayData(object = object, assay = "Spatial", slot = "counts")
-  }else{
-    sp_counts <- LayerData(object = object, assay = "Spatial", layer = "counts")
+normdata <- function(object, norm = "NormalizeData") {
+  ver <- packageVersion("Seurat") >= "5.0.0"
+
+  if (ver) {
+    sp_counts <- GetAssayData(
+      object = object, assay = "Spatial", layer = "counts"
+    )
+  } else {
+    sp_counts <- GetAssayData(
+      object = object, assay = "Spatial", slot = "counts"
+    )
   }
-  sp_counts <- as.data.frame(sp_counts)
-  rawdata <- Seurat::CreateSeuratObject(sp_counts)
-  if(norm=="NormalizeData"){
-    nordata <- Seurat::NormalizeData(rawdata, verbose = F)
-    nordata <- nordata[["RNA"]]@data
-  }else if (norm == "SCTransform"){
-    nordata <- SCTransform(rawdata, new.assay.name = "SCT", verbose = FALSE)
-    nordata <- as.data.frame(nordata[["SCT"]]@data)
-  }else {
+
+  rawdata <- CreateSeuratObject(counts = sp_counts)
+
+  if (norm == "NormalizeData") {
+    nordata <- NormalizeData(rawdata, verbose = FALSE)
+    if (ver) {
+      exp <- as.data.frame(GetAssayData(
+        nordata, assay = "RNA", layer = "data"
+      ))
+    } else {
+      exp <- as.data.frame(GetAssayData(
+        nordata, assay = "RNA", slot = "data"
+      ))
+    }
+  } else if (norm == "SCTransform") {
+    nordata <- SCTransform(rawdata, vst.flavor = "v1", verbose = FALSE)
+    if (ver) {
+      exp <- as.data.frame(GetAssayData(
+        nordata, assay = "SCT", layer = "data"
+      ))
+    } else {
+      exp <- as.data.frame(GetAssayData(
+        nordata, assay = "SCT", slot = "data"
+      ))
+    }
+  } else {
     stop("norm must be either 'NormalizeData' or 'SCTransform'")
   }
-  exp <- as.data.frame(nordata)
 
   return(exp)
 }
 
 
-
 #' @title Expression profile of secreted proteins
 #'
-#' @param exp: Expression profiling data with genes as rows and genomic loci as columns
-#' @param gene: A vector, a secreted protein gene
+#' @param exp  Expression profiling data with genes as rows and genomic loci as columns
+#' @param gene  A vector, a secreted protein gene
 #' @export
-#' @examples sm <- secret_mean(exp,gene=c("CCL21","ITGB1"))
-#'
+#' @examples
+#' \dontrun{
+#' sm <- secret_mean(exp,gene=c("CCL21","ITGB1"))
+#' }
 #'
 secret_mean<- function(exp, gene){
   secretion_exp <- exp[which(rownames(exp) %in% gene),]
@@ -152,11 +187,13 @@ secret_mean<- function(exp, gene){
 
 #' @title Membrane protein expression profile
 #'
-#' @param exp: Expression profiling data with genes as rows and genomic loci as columns
-#' @param gene: A vector, a membrane protein gene
+#' @param exp  Expression profiling data with genes as rows and genomic loci as columns
+#' @param gene  A vector, a membrane protein gene
 #' @export
-#' @examples mm <- membrane_mean(exp,gene=c("CCR7","SRC"))
-#'
+#' @examples
+#' \dontrun{
+#' mm <- membrane_mean(exp, gene = c("CCR7", "SRC"))
+#' }
 #'
 membrane_mean<- function(exp, gene){
   membrane_exp <- exp[which(rownames(exp) %in% gene),]
@@ -167,29 +204,31 @@ membrane_mean<- function(exp, gene){
 
 #' @title Filter the number of seed nodes
 #'
-#' @param SM_exp: A data frame containing information on the average secreted protein expression for each spot and whether the expression content is zero
+#' @param SM_exp  A data frame containing information on the average secreted protein expression for each spot and whether the expression content is zero
 #' @export
-#' @examples topn_sm <- top_secret(SM_exp)
-#'
+#' @examples
+#' \dontrun{
+#' topn_sm <- top_secret(SM_exp)
+#' }
 #'
 top_secret <- function(SM_exp){
   seed_node <- ceiling(nrow(SM_exp) * 0.01)
   topn_sm <- SM_exp[c(1:seed_node), ]
 
-  # 检查topn_sm$SType中零的个数
+
   zero_count <- sum(topn_sm$SType == 0)
 
   if (zero_count == seed_node) {
-    # 情况1：全部为零 -> 跳出循环
+
     return(list(status = "break_loop", message = "No expressive seed detected"))
 
   } else if (zero_count == 0) {
-    # 情况2：没有零 -> 直接计算Sper
+
     topn_sm$Sper <- topn_sm$Smean / sum(topn_sm$Smean)
     return(list(status = "success", data = topn_sm))
 
   } else {
-    # 情况3：部分为零 -> 过滤掉为零的行，然后计算Sper
+
     topn_sm <- topn_sm[topn_sm$SType != 0, ]
     topn_sm$Sper <- topn_sm$Smean / sum(topn_sm$Smean)
     return(list(status = "success", data = topn_sm))
@@ -199,12 +238,14 @@ top_secret <- function(SM_exp){
 
 #' @title Run restart random walk
 #'
-#' @param Network: A data frame, adjacency matrix with weights, rows and columns with spots
-#' @param all_spot: All spots in the expression profile
-#' @param topn_sm: A data frame containing information on the mean expression of secreted proteins used as seed spots
+#' @param Network  A data frame, adjacency matrix with weights, rows and columns with spots
+#' @param all_spot  All spots in the expression profile
+#' @param topn_sm  A data frame containing information on the mean expression of secreted proteins used as seed spots
 #' @export
-#' @examples aa <- run_rwr(Network,all_spot,topn_sm)
-#'
+#' @examples
+#' \dontrun{
+#'  aa <- run_rwr(Network,all_spot,topn_sm)
+#' }
 #'
 run_rwr<- function(Network,all_spot,topn_sm){
   matrix1 <- Network[all_spot,all_spot]
@@ -222,11 +263,20 @@ run_rwr<- function(Network,all_spot,topn_sm){
 
 #' @title Integrated scores
 #'
-#' @param aa: A data frame, run_rwr function run results
-#' @param SM_exp: A data frame containing information on the average secreted protein expression for each spot and whether the expression content is zero
-#' @param topn_sm: A data frame containing information on the mean expression of secreted proteins used as seed spots
+#' @param aa  A data frame, run_rwr function run results
+#' @param SM_exp  A data frame containing information on the average secreted protein expression for each spot and whether the expression content is zero
+#' @param topn_sm  A data frame containing information on the mean expression of secreted proteins used as seed spots
 #' @export
-#' @examples IS <- ISs(aa,topn_sm,SM_exp)
+#'
+#' @examples
+#' \dontrun{
+#' # These objects are typically generated by the SIOSSAR workflow.
+#' # Example :
+#' # aa <- run_rwr(Network, all_spot, topn_sm)
+#' # topn_sm <- top.secret(SM_exp)
+#' # SM_exp <- secret.mean(exp, genes)
+#' IS <- ISs(aa, topn_sm, SM_exp)
+#' }
 #'
 #'
 ISs<- function(aa,topn_sm,SM_exp){
@@ -248,32 +298,34 @@ ISs<- function(aa,topn_sm,SM_exp){
 #' @title Define hierarchy
 #'
 #' @param plot_all Results for the scores as well as p-values
-#'
 #' @return A data frame containing hierarchical information
+#' @importFrom stats quantile
 #' @export
 #'
-#' @examples plot_all <- hierarchy(plot_all)
-#'
+#' @examples
+#' \dontrun{
+#' # This function expects a data frame with specific columns from compute_siossar.
+#' # See the vignette for a complete example.
+#' plot_all <- hierarchy(plot_all)
+#' }
 #'
 hierarchy <- function(plot_all){
-  # 初始化
+
   plot_all$level <- NA
 
-  # Tier 1：显著激活
   plot_all$level[plot_all$group != "others"] <- "layer 1"
 
-  # 剩余 spots
+
   plot_all_other <- plot_all[plot_all$group == "others", ]
 
-  # 按得分降序排序
+
   plot_all_other <- plot_all_other[order(-plot_all_other$scale_mean_rank), ]
 
-  # 计算9个分位区间
+
   q <- quantile(plot_all_other$scale_mean_rank,
                 probs = seq(0, 1, length.out = 10),
                 na.rm = TRUE)
 
-  # 按区间划分 layer 2-10
   for(i in 1:9){
 
     idx <- which(
@@ -289,82 +341,87 @@ hierarchy <- function(plot_all){
 
   return(plot_all)
 }
-#1.按照 scale_mean_rank 均匀区间 (seq) 划分,可能存在得分分布比较不均匀，在某一个区间并没有划分出层的情况
-#2.使用quantile 分位数，可能存在得分差距较小或者几乎没有，分布比较平坦，但依然能够分出层，目前按照2执行
-
+#1. When dividing into uniform intervals (seq) based on scale_mean_rank, the score distribution may be uneven, resulting in some intervals where no distinct tier is identified.
+#2. When using quantiles, the score differences may be small or negligible, and the distribution may be relatively flat; however, distinct tiers can still be identified. Currently, method 2 is being used.
 
 
 #' @title Pathway activation maps were calculated as well as scores for each spot
 #'
-#' @param object: a seurat object
-#' @param LR_PPI: Threshold for background interaction pairs (confidence level),e.g. low-, medium-, and high-confidence
-#' @param pathway: A vector that needs to run the pathway
-#' @param norm: normalization method,NormalizeData or SCTransform
-#' @param verbose: Logical value, whether to print detailed progress information
+#' @param object  a seurat object
+#' @param LR_PPI  Threshold for background interaction pairs (confidence level),e.g. low-, medium-, and high-confidence
+#' @param pathway  A vector that needs to run the pathway
+#' @param norm  normalization method,NormalizeData or SCTransform
+#' @param verbose  Logical value, whether to print detailed progress information
 #' @return returns a dataframe with cells as rows and mca coordinates as columns
 #' @export
-#' @import Seurat Matrix
+#' @import Seurat
+#' @importFrom dplyr group_by filter
+#' @importFrom dplyr sample_n
+#' @importFrom utils txtProgressBar setTxtProgressBar
+#' @importFrom magrittr %>%
 #'
-#' @usage compute_siossar(object, LR_PPI = "high_ppi_list", pathway, norm="NormalizeData" ,verbose = TRUE)
+#' @usage compute_siossar(object, LR_PPI = "high_ppi_list", pathway,
+#'                         norm="NormalizeData" ,verbose = TRUE)
 #'
 #'
 compute_siossar <- function(object, LR_PPI = "high_ppi_list", pathway, norm="NormalizeData" ,verbose = TRUE){
-  library(Seurat)
-  library(dplyr)
 
   data(list = LR_PPI, package = "SIOSSAR", envir = environment())
   LR_PPI <- get(LR_PPI, envir = environment())
 
 
-  PPI_list <- list()   # 保存所有 pathway 的PPI
+  PPI_list <- list()   # Save the PPI data for all pathways
 
-  # 记录总开始时间
   total_start_time <- Sys.time()
   if(verbose) cat("\n", paste(rep("=", 60), collapse = ""), "\n")
   if(verbose) cat("Starting SIOSSAR analysis for", length(pathway), "pathways\n")
   if(verbose) cat(paste(rep("=", 60), collapse = ""), "\n\n")
 
   #Location information
-  if(verbose) cat("Step 1/3: Preparing spatial coordinates and network...\n")
-  meta <- object@images[["image"]]@coordinates
-  meta$barcode <- rownames(meta)
-  colnames(meta) <-c("tissue","array_row","array_col","x","y","barcode")
+  if(verbose) cat("Step 1/3  Preparing spatial coordinates and network...\n")
+  if(packageVersion("Seurat")<"5.0.0"){
+    meta <- object@images[["image"]]@coordinates
+    meta$barcode <- rownames(meta)
+    colnames(meta) <-c("tissue","array_row","array_col","x","y","barcode")
+  }else{
+    meta <- GetTissueCoordinates(object)
+    meta$barcode <- rownames(meta)
+  }
   dist_long <- construct_adj_long(meta)
   dist_long_sub <- dist_long %>% group_by(from) %>% dplyr::filter(distance %in% sort(distance)[1:10])
   Network <- construct_adj_wide(dist_long_sub)
-  if(verbose) cat("  ✓ Network constructed with", nrow(Network), "spots\n")
+  if(verbose) cat("  [OK] Network constructed with", nrow(Network), "spots\n")
 
-  if(verbose) cat("Step 2/3: Normalizing expression data...\n")
-  exp <- norm(object,norm)
-  if(verbose) cat("  ✓ Expression data normalized with", nrow(exp), "genes\n")
+  if(verbose) cat("Step 2/3  Normalizing expression data...\n")
+  exp <- normdata(object,norm)
+  if(verbose) cat("  [OK] Expression data normalized with", nrow(exp), "genes\n")
 
-  if(verbose) cat("Step 3/3: Processing pathways...\n\n")
+  if(verbose) cat("Step 3/3  Processing pathways...\n\n")
 
   #Cyclic running pathway
   for (n in 1:length(pathway)) {
-    # 记录每个pathway的开始时间
     pathway_start_time <- Sys.time()
 
     if(verbose){
       cat("  ", paste(rep("-", 50), collapse = ""), "\n")
-      cat("  [", n, "/", length(pathway), "] Processing pathway: ", pathway[n], "\n", sep = "")
+      cat("  [", n, "/", length(pathway), "] Processing pathway  ", pathway[n], "\n", sep = "")
       cat("  ", paste(rep("-", 50), collapse = ""), "\n")
     }
 
-    # Step 1: Extract PPI for current pathway
-    if(verbose) cat("    Step 1/6: Extracting PPI interactions... ")
+    # Step 1  Extract PPI for current pathway
+    if(verbose) cat("    Step 1/6  Extracting PPI interactions... ")
     PPI <- LR_PPI[[pathway[n]]]
     #PPI <- LR_PPI[which(LR_PPI$Description ==pathway[n]),]
     PPI_sub <-PPI[which(PPI$source %in% rownames(exp) & PPI$target %in% rownames(exp)),]
     PPI_sub <- unique(PPI_sub[,c(1,2)])
     if(verbose) cat("Found", nrow(PPI_sub), "interactions\n")
 
-    # 保存PPI
+
     PPI_list[[pathway[n]]] <- PPI_sub
 
     if(nrow(PPI_sub)!=0){
-      # Step 2: Calculate expression means
-      if(verbose) cat("    Step 2/6: Calculating secreted and membrane protein expression... ")
+      # Step 2  Calculate expression means
+      if(verbose) cat("    Step 2/6  Calculating secreted and membrane protein expression... ")
       sm <- secret_mean(exp,PPI_sub$source)
       mm <- membrane_mean(exp,PPI_sub$target)
       SM_exp <- sm
@@ -373,14 +430,14 @@ compute_siossar <- function(object, LR_PPI = "high_ppi_list", pathway, norm="Nor
       SM_exp$SType <- ifelse((SM_exp$Smean>0),1,0)
       if(verbose) cat("Done\n")
 
-      # Step 3: Select seed nodes
-      if(verbose) cat("    Step 3/6: Selecting seed nodes (top 1%)... ")
+      # Step 3  Select seed nodes
+      if(verbose) cat("    Step 3/6  Selecting seed nodes (top 1%)... ")
       topn_sm_result <- top_secret(SM_exp)
 
       if (topn_sm_result$status == "break_loop") {
-        cat("\n    ⚠ Warning:", topn_sm_result$message, "\n")
-        cat("    Skipping pathway: ", pathway[n], " due to no expressive seed\n", sep = "")
-        next  # 跳过当前pathway，继续下一个
+        cat("\n    [WARNING]", topn_sm_result$message, "\n")
+        cat("    Skipping pathway  ", pathway[n], " due to no expressive seed\n", sep = "")
+        next
       } else if (topn_sm_result$status == "success") {
         topn_sm <- topn_sm_result$data
         if(verbose) cat("Found", nrow(topn_sm), "seed nodes\n")
@@ -388,13 +445,13 @@ compute_siossar <- function(object, LR_PPI = "high_ppi_list", pathway, norm="Nor
 
       all_spot <- SM_exp$barcode
 
-      # Step 4: Run random walk
-      if(verbose) cat("    Step 4/6: Running random walk with restart... ")
+      # Step 4  Run random walk
+      if(verbose) cat("    Step 4/6  Running random walk with restart... ")
       aa <- run_rwr(Network,all_spot,topn_sm)
       if(verbose) cat("Done\n")
 
-      # Step 5: Calculate integrated scores
-      if(verbose) cat("    Step 5/6: Calculating integrated scores... ")
+      # Step 5  Calculate integrated scores
+      if(verbose) cat("    Step 5/6  Calculating integrated scores... ")
       IS <- ISs(aa,topn_sm,SM_exp)
 
       ####Random 100 times to generate a null distribution
@@ -403,7 +460,6 @@ compute_siossar <- function(object, LR_PPI = "high_ppi_list", pathway, norm="Nor
       rownames(random) <-IS$barcode
       set.seed(123)
 
-      # 添加随机化过程的子进度条（可选）
       if(verbose) {
         pb <- txtProgressBar(min = 0, max = 100, style = 3, char = ".")
       }
@@ -435,8 +491,8 @@ compute_siossar <- function(object, LR_PPI = "high_ppi_list", pathway, norm="Nor
       }
       IS_signif <- IS[which(IS$p_value<0.1),]
 
-      # Step 6: Summarize scores and define hierarchy
-      if(verbose) cat("    Step 6/6: Summarizing scores and defining hierarchy... ")
+      # Step 6  Summarize scores and define hierarchy
+      if(verbose) cat("    Step 6/6  Summarizing scores and defining hierarchy... ")
       plot_all <- meta
       rownames(plot_all) <- plot_all$barcode
       plot_all$mean_rank<- IS[plot_all$barcode,]$mean_rank
@@ -458,48 +514,44 @@ compute_siossar <- function(object, LR_PPI = "high_ppi_list", pathway, norm="Nor
 
       if(verbose) cat("Done\n")
 
-      # 计算并显示当前pathway的运行时间
       pathway_end_time <- Sys.time()
       pathway_elapsed <- difftime(pathway_end_time, pathway_start_time, units = "mins")
 
       if(verbose){
-        cat("    ✓ Pathway", pathway[n], "completed in",
+        cat("    [OK] Pathway", pathway[n], "completed in",
             round(pathway_elapsed, 2), "minutes\n")
 
-        # 显示找到的激活区域统计
+
         n_seed <- nrow(topn_sm)
         n_activated <- nrow(IS_signif)
-        cat("      Summary:", n_seed, "seed nodes,", n_activated, "activated spots\n")
+        cat("      Summary ", n_seed, "seed nodes,", n_activated, "activated spots\n")
       }
 
     } else {
-      if(verbose) cat("    ⚠ Warning: Pathway not found in background interaction data\n")
+      if(verbose) cat("    [WARNING] Pathway not found in background interaction data\n")
     }
 
-    # 计算并显示总体进度
     if(verbose && n < length(pathway)){
       elapsed_total <- difftime(Sys.time(), total_start_time, units = "mins")
       avg_time <- elapsed_total / n
       remaining <- avg_time * (length(pathway) - n)
-      cat("    Progress:", n, "/", length(pathway),
+      cat("    Progress ", n, "/", length(pathway),
           "pathways processed (", round(n/length(pathway)*100, 1), "%)\n", sep = "")
-      cat("    Estimated remaining time:", round(remaining, 2), "minutes\n\n")
+      cat("    Estimated remaining time ", round(remaining, 2), "minutes\n\n")
     }
   }
 
-  # 计算总运行时间
   total_end_time <- Sys.time()
   total_elapsed <- difftime(total_end_time, total_start_time, units = "mins")
 
   if(verbose){
     cat("\n", paste(rep("=", 60), collapse = ""), "\n")
     cat("SIOSSAR analysis completed!\n")
-    cat("Total time:", round(total_elapsed, 2), "minutes\n")
+    cat("Total time ", round(total_elapsed, 2), "minutes\n")
     cat("Processed", length(pathway), "pathways\n")
     cat(paste(rep("=", 60), collapse = ""), "\n")
   }
 
-  # 保存PPI
   object@misc$SIOSSAR_PPI <- PPI_list
   return(object)
 }
@@ -512,31 +564,34 @@ compute_siossar <- function(object, LR_PPI = "high_ppi_list", pathway, norm="Nor
 #'
 #' @param out_data output of 'compute_siossar'
 #' @param pathway pathway
-#' @param level The number of layers the user wants to output,Default is 10
+#' @param show_layers numeric vector of layers to display,Default is 10
+#' @param layer_colors optional named color vector
 #' @return Output graph
 #' @export
-#' @examples p <- hplot(object,"glycolytic_process",1:3)
 #'
-#'
+#' @importFrom Seurat SpatialDimPlot
+#' @importFrom ggplot2 scale_fill_manual theme element_text element_rect
+#' @examples
+#' \dontrun{
+#' p <- hplot(object, "glycolytic_process",1:3)
+#' }
 hplot <- function(out_data, pathway, show_layers = 1:10, layer_colors = NULL){
-
-  library(ggplot2)  # 确保ggplot2已加载
 
   m <- out_data@meta.data
   layer_col <- paste0(pathway, "_level")
 
-  # 检查layer列是否存在
+
   if(!layer_col %in% colnames(m)){
     stop(paste("Layer column", layer_col, "not found in metadata"))
   }
 
-  # 如果layer是 "layer 1" 这种字符串，提取数字
+
   m$layer_num <- as.numeric(gsub("layer ", "", m[, layer_col]))
 
-  # 选择指定层
+
   acti <- m[m$layer_num %in% show_layers, ]
 
-  # 如果没有符合条件的层，返回提示
+
   if(nrow(acti) == 0){
     warning("No spots found in the specified layers")
     return(NULL)
@@ -545,7 +600,7 @@ hplot <- function(out_data, pathway, show_layers = 1:10, layer_colors = NULL){
   # subset Seurat object
   subset_obj <- out_data[, rownames(acti)]
 
-  # 默认颜色
+
   if(is.null(layer_colors)){
     layer_colors <- c(
       "#583C88FF", "#764395FF", "#924CA1FF",
@@ -554,41 +609,41 @@ hplot <- function(out_data, pathway, show_layers = 1:10, layer_colors = NULL){
     )
   }
 
-  # 确保颜色数量够
+
   layer_colors <- layer_colors[1:length(show_layers)]
   names(layer_colors) <- paste0("layer ", show_layers)
 
-  # 获取subset对象的barcodes
+
   subset_barcodes <- rownames(subset_obj@meta.data)
 
-  # 从m中提取对应的layer_num，使用barcodes匹配
+
   subset_layer_nums <- m[subset_barcodes, "layer_num"]
 
-  # 检查是否有NA
+
   if(any(is.na(subset_layer_nums))){
     warning("Some spots have NA layer numbers")
-    # 可以选择过滤掉NA的行
+
     valid_spots <- !is.na(subset_layer_nums)
     subset_obj <- subset_obj[, valid_spots]
     subset_layer_nums <- subset_layer_nums[valid_spots]
   }
 
-  # 设置layer为factor
+
   subset_obj@meta.data$plot_layer <- factor(
     paste0("layer ", subset_layer_nums),
     levels = paste0("layer ", show_layers)
   )
 
-  # 使用SpatialDimPlot绘图，并用scale_fill_manual上色
+
   p <- SpatialDimPlot(
     subset_obj,
     group.by = "plot_layer",
     pt.size.factor = 2,
-    crop = TRUE,  # 只显示含有数据的区域，不包括外部的空白区域
+    crop = TRUE,
     image.alpha = 0.7,
     stroke = NA
   ) +
-    scale_fill_manual(values = layer_colors, na.value = "grey50") +  # 添加na.value处理NA值
+    scale_fill_manual(values = layer_colors, na.value = "grey50") +
     theme(
       #legend.position = "top",
       #legend.title.position = "top",
@@ -609,23 +664,27 @@ hplot <- function(out_data, pathway, show_layers = 1:10, layer_colors = NULL){
 #' @param pathway pathway
 #' @return Output graph
 #' @export
-#' @examples p <- score_plot(object,"glycolytic_process")
-#'
-#'
+#' @importFrom Seurat SpatialDimPlot
+#' @importFrom ggplot2 scale_fill_gradientn theme element_text element_rect
+#' @importFrom scales rescale
+#' @importFrom Seurat SpatialFeaturePlot
+#' @examples
+#' \dontrun{
+#' p <- score_plot(object, "glycolytic_process")
+#' }
 score_plot <- function(out_data,pathway){
-  library(ggplot2)
+
   p <- SpatialFeaturePlot(out_data, features =pathway, pt.size.factor =2, alpha = c(0.3, 1),
-                          crop =T,#只显示含有数据的区域，不包括外部的空白区域
+                          crop =T,
                           image.alpha =0.7,stroke =NA)+
     theme(#legend.position = "top",
           #legend.title.position="top",
-          legend.title = element_text(size = 14),  # 图例标题字体大小
-          legend.text = element_text(size = 10),    # 图例文本字体大小
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 10),
           plot.background = element_rect(fill = "white"),
           legend.background = element_rect(fill = "white")) +
-    scale_fill_gradientn(colors = c("#FCF8BAFF", "#FECA8DFF", "#C93E73FF", "#331067FF"),  # 定义多个颜色
-                         values = scales::rescale(c(0, 0.5, 0.75, 1)))   # 从蓝色(低值)到红色(高值)
-  return(p)
+    scale_fill_gradientn(colors = c("#FCF8BAFF", "#FECA8DFF", "#C93E73FF", "#331067FF"),
+                         values = rescale(c(0, 0.5, 0.75, 1)))
 }
 
 
@@ -637,17 +696,20 @@ score_plot <- function(out_data,pathway){
 #' @param pathway pathway
 #' @return Output graph
 #' @export
-#' @examples p <- hot_region_plot(object,"glycolytic_process")
-#'
-#'
+#' @importFrom Seurat SpatialDimPlot
+#' @importFrom ggplot2 scale_fill_manual theme element_text element_rect
+#' @examples
+#' \dontrun{
+#' p <- hot_region_plot(object, "glycolytic_process")
+#' }
 hot_region_plot <- function(out_data,pathway){
 
   p <- SpatialDimPlot(out_data, label = F, label.size = 2, pt.size.factor =1.5,alpha = 1,
                       group.by = paste0(pathway,"_region"), image.alpha = 1,stroke =NA)+
     theme(#legend.position = "top",
           #legend.title.position="top",
-          legend.title = element_text(size = 14),  # 图例标题字体大小
-          legend.text = element_text(size = 12),    # 图例文本字体大小
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12),
           plot.background = element_rect(fill = "white"),
           legend.background = element_rect(fill = "white"))+
     scale_fill_manual(values = c("seed node"="#FFB900",
@@ -659,7 +721,7 @@ hot_region_plot <- function(out_data,pathway){
 
 
 
-#可视化
+# Visualization
 #
 
 #' @title Output Contribution of SP-MP
@@ -668,14 +730,18 @@ hot_region_plot <- function(out_data,pathway){
 #' @param pathway pathway
 #' @return Output graph
 #' @export
-#' @examples p <- plot_PPI_sankey(object,"glycolytic_process")
-#'
+#' @importFrom ggalluvial geom_alluvium geom_stratum
+#' @importFrom dplyr group_by summarise mutate
+#' @importFrom ggplot2 ggplot aes geom_text after_stat scale_x_discrete theme_bw theme element_blank
+#' @importFrom tidyr gather spread
+#' @importFrom magrittr %>%
+#' @importFrom dplyr n
+#' @examples
+#' \dontrun{
+#' p <- plot_PPI_sankey(object,"glycolytic_process")
+#' }
 #'
 plot_PPI_sankey <- function(object, pathway){
-
-  library(ggalluvial)
-  library(dplyr)
-  library(ggplot2)
 
   PPI_list <- object@misc$SIOSSAR_PPI
 
@@ -695,7 +761,6 @@ plot_PPI_sankey <- function(object, pathway){
     }
   }
 
-  # 统计每个pathway-ligand-receptor组合
   sankey_df <- all_df %>%
     group_by(pathway, ligand, receptor) %>%
     summarise(freq = n(), .groups="drop")
@@ -740,12 +805,13 @@ plot_PPI_sankey <- function(object, pathway){
 #' @param top_n Select the number of top pathways to display based on the count of activated spots
 #' @return Output graph
 #' @export
-#' @examples p <- hot_region_plot(object,"glycolytic_process")
-#'
-#'
+#' @importFrom pheatmap pheatmap
+#' @examples
+#' \dontrun{
+#' p <- plot_top_pathway_heatmap(object, pathway, top_n = 1)
+#' }
 plot_top_pathway_heatmap <- function(object, pathway, top_n = 20){
 
-  library(pheatmap)
 
   stat <- data.frame()
 

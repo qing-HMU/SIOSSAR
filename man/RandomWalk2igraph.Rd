@@ -7,13 +7,13 @@
 RandomWalk2igraph(igraphM, VertexWeight, EdgeWeight = TRUE, gamma = 0.7)
 }
 \arguments{
-\item{igraphM:}{matrix of adjacency,the rows and columns are spot}
+\item{igraphM}{matrix of adjacency,the rows and columns are spot}
 
-\item{VertexWeight:}{a vector v with a length equal to the total number of spots in the slice}
+\item{VertexWeight}{a vector v with a length equal to the total number of spots in the slice}
 
-\item{EdgeWeight:}{logical value, default is TRUE}
+\item{EdgeWeight}{logical value, default is TRUE}
 
-\item{gamma:}{restart probability,default is 0.7}
+\item{gamma}{restart probability,default is 0.7}
 }
 \value{
 returns a vector ,reflecting the probability each spot is labeled during the propagation
@@ -22,7 +22,9 @@ returns a vector ,reflecting the probability each spot is labeled during the pro
 RandomWalk function
 }
 \examples{
-visProbs<-RandomWalk2igraph(matrix1,Vector1,EdgeWeight=TRUE,gamma=0.7)
-
+\dontrun{
+# This example requires a valid adjacency matrix and seed vector
+# visProbs <- RandomWalk2igraph(matrix1, Vector1, EdgeWeight = TRUE, gamma = 0.7)
+}
 
 }

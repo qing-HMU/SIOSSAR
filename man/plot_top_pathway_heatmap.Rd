@@ -20,7 +20,7 @@ Output graph
 Output top 20 pathway
 }
 \examples{
-p <- hot_region_plot(object,"glycolytic_process")
-
-
+\dontrun{
+p <- plot_top_pathway_heatmap(object, pathway, top_n = 1)
+}
 }

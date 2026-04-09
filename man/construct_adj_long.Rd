@@ -7,7 +7,7 @@
 construct_adj_long(M)
 }
 \arguments{
-\item{M:}{A data frame containing the coordinates of the idle data and the barcode}
+\item{M}{A data frame containing the coordinates of the idle data and the barcode}
 }
 \value{
 A data frame containing the Euclidean distance between any two spots
@@ -16,7 +16,7 @@ A data frame containing the Euclidean distance between any two spots
 The distance matrix undirected network was constructed to calculate the distance between any two spots
 }
 \examples{
+\dontrun{
 dist_long <- construct_adj_long(meta)
-
-
+}
 }

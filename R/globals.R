@@ -1,0 +1,2 @@
+utils::globalVariables(c("from", "distance", "value", "ligand", "receptor", "freq", "stratum"))
+utils::globalVariables(c("%>%", "data", "n", "packageVersion", "quantile", "sample_n", "txtProgressBar", "setTxtProgressBar", "LayerData"))

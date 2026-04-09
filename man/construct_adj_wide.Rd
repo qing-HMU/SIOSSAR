@@ -7,13 +7,14 @@
 construct_adj_wide(dist_long_sub)
 }
 \arguments{
-\item{dist_long_sub:}{A data frame including the distance between any two spots}
+\item{dist_long_sub}{A data frame including the distance between any two spots}
 }
 \description{
 Construct the weighted adjacency matrix
 }
 \examples{
+\dontrun{
 Network <- construct_adj_wide(dist_long)
-
+}
 
 }

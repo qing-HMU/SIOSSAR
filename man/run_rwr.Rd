@@ -7,17 +7,18 @@
 run_rwr(Network, all_spot, topn_sm)
 }
 \arguments{
-\item{Network:}{A data frame, adjacency matrix with weights, rows and columns with spots}
+\item{Network}{A data frame, adjacency matrix with weights, rows and columns with spots}
 
-\item{all_spot:}{All spots in the expression profile}
+\item{all_spot}{All spots in the expression profile}
 
-\item{topn_sm:}{A data frame containing information on the mean expression of secreted proteins used as seed spots}
+\item{topn_sm}{A data frame containing information on the mean expression of secreted proteins used as seed spots}
 }
 \description{
 Run restart random walk
 }
 \examples{
-aa <- run_rwr(Network,all_spot,topn_sm)
-
+\dontrun{
+ aa <- run_rwr(Network,all_spot,topn_sm)
+}
 
 }

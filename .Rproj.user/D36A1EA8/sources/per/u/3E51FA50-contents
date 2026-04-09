@@ -1,2 +1,14 @@
+unlink("NAMESPACE")
 devtools::document()
+tools::showNonASCIIfile("R/SIOSSAR_functions.R")
+
+getwd()
+file.exists("DESCRIPTION")
+
+
+devtools::build_vignettes()
+
+devtools::check()
+
 devtools::build()
+

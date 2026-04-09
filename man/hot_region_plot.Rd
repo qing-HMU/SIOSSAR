@@ -18,7 +18,7 @@ Output graph
 Output region results
 }
 \examples{
-p <- hot_region_plot(object,"glycolytic_process")
-
-
+\dontrun{
+p <- hot_region_plot(object, "glycolytic_process")
+}
 }

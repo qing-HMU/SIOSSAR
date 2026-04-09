@@ -11,7 +11,9 @@ hplot(out_data, pathway, show_layers = 1:10, layer_colors = NULL)
 
 \item{pathway}{pathway}
 
-\item{level}{The number of layers the user wants to output,Default is 10}
+\item{show_layers}{numeric vector of layers to display,Default is 10}
+
+\item{layer_colors}{optional named color vector}
 }
 \value{
 Output graph
@@ -20,7 +22,7 @@ Output graph
 Output hierarchical results
 }
 \examples{
-p <- hplot(object,"glycolytic_process",1:3)
-
-
+\dontrun{
+p <- hplot(object, "glycolytic_process",1:3)
+}
 }

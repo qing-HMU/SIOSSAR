@@ -16,7 +16,10 @@ A data frame containing hierarchical information
 Define hierarchy
 }
 \examples{
+\dontrun{
+# This function expects a data frame with specific columns from compute_siossar.
+# See the vignette for a complete example.
 plot_all <- hierarchy(plot_all)
-
+}
 
 }
