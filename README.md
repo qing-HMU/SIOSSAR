@@ -26,7 +26,11 @@ install.packages('SIOSSAR')
 library(SIOSSAR)
 
 # Load example data
-file_path <- system.file("extdata", "siossar_example.rds", package = "SIOSSAR")
+if (packageVersion("Seurat") >= "5.0.0") {
+  file_path <- system.file("extdata", "siossar_example_v5.rds", package = "SIOSSAR")
+}else{
+  file_path <- system.file("extdata", "siossar_example_v4.rds", package = "SIOSSAR")
+}
 data <- readRDS(file_path)
 
 # Define pathways to analyse
